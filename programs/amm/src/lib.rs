@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 
 pub use constants::*;
 pub use instructions::*;
-pub use state::*;
+pub use state::*;   
 
 declare_id!("6gi14ywqAw7HR8kUUrRaK8dkXNdW2PyRifZT1nMkbct2");
 
@@ -15,11 +15,19 @@ declare_id!("6gi14ywqAw7HR8kUUrRaK8dkXNdW2PyRifZT1nMkbct2");
 pub mod amm {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        crate::instructions::initialize::handle_initialize(ctx)
+    pub fn initialize(ctx: Context<InitializePool>) -> Result<()> {
+        crate::instructions::initialize_pool::handler(ctx)
     }
 
-    pub fn increment(ctx: Context<Increment>) -> Result<()> {
-        crate::instructions::increment::handle_increment(ctx)
+    pub fn add_liquidity(ctx: Context<AddLiquidity>) -> Result<()> {
+        crate::instructions::add_liquidity::handler(ctx)
+    }
+
+    pub fn remove_liquidity(ctx: Context<RemoveLiquidity>) -> Result<()> {
+        crate::instructions::remove_liquidity::handler(ctx)
+    }
+
+    pub fn swap(ctx: Context<Swap>) -> Result<()> {
+        crate::instructions::swap::handler(ctx)
     }
 }
