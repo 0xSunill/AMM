@@ -1,10 +1,6 @@
-use anchor_lang::prelude::*;
+pub const POOL_SEED: &[u8] = b"pool";
+pub const VAULT_A_SEED: &[u8] = b"vault_a";
+pub const VAULT_B_SEED: &[u8] = b"vault_b";
+pub const LP_MINT_SEED: &[u8] = b"lp_mint";
 
-#[constant]
-pub const COUNTER_SEED: &[u8] = b"counter";
-
-#[constant]
-pub const HELLO_WORLD_LAMPORTS: u64 = 1;
-
-#[constant]
-pub const MAX_COUNT: u64 = 10;
+pub const FEE_BPS: u16 = 30;

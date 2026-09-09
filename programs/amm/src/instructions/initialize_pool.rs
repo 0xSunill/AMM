@@ -17,7 +17,7 @@ pub struct InitializePool<'info> {
         payer = payer,
         space = 8 + PoolState::INIT_SPACE,
         seeds = [
-            b"pool",
+            POOL_SEED,
             token_a_mint.key().as_ref(),
             token_b_mint.key().as_ref()
         ],
@@ -25,14 +25,13 @@ pub struct InitializePool<'info> {
     )]
     pub pool: Account<'info, PoolState>,
 
-    // Holds Token A
     #[account(
         init,
         payer = payer,
         token::mint = token_a_mint,
         token::authority = pool,
         seeds = [
-            b"vault_a",
+            VAULT_A_SEED,
             token_a_mint.key().as_ref(),
             token_b_mint.key().as_ref()
         ],
@@ -40,14 +39,14 @@ pub struct InitializePool<'info> {
     )]
     pub vault_a: Account<'info, TokenAccount>,
 
-    // Holds Token B
+   
     #[account(
         init,
         payer = payer,
         token::mint = token_b_mint,
         token::authority = pool,
         seeds = [
-            b"vault_b",
+            VAULT_B_SEED,
             token_a_mint.key().as_ref(),
             token_b_mint.key().as_ref()
         ],
@@ -55,14 +54,14 @@ pub struct InitializePool<'info> {
     )]
     pub vault_b: Account<'info, TokenAccount>,
 
-    // Defines our LP token
+
     #[account(
         init,
         payer = payer,
         mint::decimals = 6,
         mint::authority = pool,
         seeds = [
-            b"lp_mint",
+            LP_MINT_SEED,
             token_a_mint.key().as_ref(),
             token_b_mint.key().as_ref()
         ],
@@ -70,7 +69,7 @@ pub struct InitializePool<'info> {
     )]
     pub lp_mint: Account<'info, Mint>,
 
-    // Existing token definitions
+
     pub token_a_mint: Account<'info, Mint>,
     pub token_b_mint: Account<'info, Mint>,
 
@@ -90,7 +89,7 @@ pub fn handler(ctx: Context<InitializePool>) -> Result<()> {
 
     pool.lp_token_mint = ctx.accounts.lp_mint.key();
 
-    pool.fee_bps = 30;
+    pool.fee_bps = FEE_BPS;
     pool.bump = ctx.bumps.pool;
 
     msg!("Pool initialized successfully");
