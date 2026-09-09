@@ -1,0 +1,195 @@
+use std::cmp;
+
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
+
+use crate::{constants::*, error::ErrorCode, state::PoolState};
+
+#[derive(Accounts)]
+pub struct AddLiquidity<'info> {
+  
+    #[account(mut)]
+    pub user: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [
+            POOL_SEED,
+            token_a_mint.key().as_ref(),
+            token_b_mint.key().as_ref()
+        ],
+        bump = pool.bump,
+    )]
+    pub pool: Account<'info, PoolState>,
+
+    #[account(
+        mut,
+        address = pool.token_a_vault,
+    )]
+    pub vault_a: Account<'info, TokenAccount>,
+
+   
+    #[account(
+        mut,
+        address = pool.token_b_vault,
+    )]
+    pub vault_b: Account<'info, TokenAccount>,
+
+
+    #[account(
+        mut,
+        address = pool.lp_token_mint,
+    )]
+    pub lp_mint: Account<'info, Mint>,
+
+
+    pub token_a_mint: Account<'info, Mint>,
+    pub token_b_mint: Account<'info, Mint>,
+
+    // User's Token A account
+    #[account(
+        mut,
+        token::mint = token_a_mint,
+        token::authority = user,
+    )]
+    pub user_token_a: Account<'info, TokenAccount>,
+
+ 
+    #[account(
+        mut,
+        token::mint = token_b_mint,
+        token::authority = user,
+    )]
+    pub user_token_b: Account<'info, TokenAccount>,
+
+   
+    #[account(
+        mut,
+        token::mint = lp_mint,
+        token::authority = user,
+    )]
+    pub user_lp_token: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
+
+pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Result<()> {
+  
+    let reserve_a = ctx.accounts.vault_a.amount;
+    let reserve_b = ctx.accounts.vault_b.amount;
+    let lp_supply = ctx.accounts.lp_mint.supply;
+
+    require!(amount_a > 0, ErrorCode::InvalidAmount);
+    require!(amount_b > 0, ErrorCode::InvalidAmount);
+
+   
+    let lp_to_mint = if lp_supply == 0 {
+        integer_sqrt(
+            amount_a
+                .checked_mul(amount_b)
+                .ok_or(ErrorCode::MathOverflow)?,
+        )
+    } else {
+        require!(reserve_a > 0, ErrorCode::InsufficientLiquidity);
+        require!(reserve_b > 0, ErrorCode::InsufficientLiquidity);
+
+        let lp_amount_a = amount_a
+            .checked_mul(lp_supply)
+            .ok_or(ErrorCode::MathOverflow)?
+            .checked_div(reserve_a)
+            .ok_or(ErrorCode::MathOverflow)?;
+
+        let lp_amount_b = amount_b
+            .checked_mul(lp_supply)
+            .ok_or(ErrorCode::MathOverflow)?
+            .checked_div(reserve_b)
+            .ok_or(ErrorCode::MathOverflow)?;
+
+        cmp::min(lp_amount_a, lp_amount_b)
+    };
+
+    require!(lp_to_mint > 0, ErrorCode::InvalidAmount);
+
+   
+    let transfer_a_accounts = Transfer {
+        from: ctx.accounts.user_token_a.to_account_info(),
+        to: ctx.accounts.vault_a.to_account_info(),
+        authority: ctx.accounts.user.to_account_info(),
+    };
+
+    let transfer_a_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        transfer_a_accounts,
+    );
+
+    token::transfer(transfer_a_ctx, amount_a)?;
+
+   
+
+    let transfer_b_accounts = Transfer {
+        from: ctx.accounts.user_token_b.to_account_info(),
+        to: ctx.accounts.vault_b.to_account_info(),
+        authority: ctx.accounts.user.to_account_info(),
+    };
+
+    let transfer_b_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        transfer_b_accounts,
+    );
+
+    token::transfer(transfer_b_ctx, amount_b)?;
+
+
+    let pool_key = ctx.accounts.pool.key();
+
+    let signer_seeds: &[&[u8]] = &[
+        POOL_SEED,
+        ctx.accounts.token_a_mint.key().as_ref(),
+        ctx.accounts.token_b_mint.key().as_ref(),
+        &[ctx.accounts.pool.bump],
+    ];
+
+    let mint_to_accounts = MintTo {
+        mint: ctx.accounts.lp_mint.to_account_info(),
+        to: ctx.accounts.user_lp_token.to_account_info(),
+        authority: ctx.accounts.pool.to_account_info(),
+    };
+
+    let mint_to_ctx = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        mint_to_accounts,
+        &[signer_seeds],
+    );
+
+    token::mint_to(mint_to_ctx, lp_to_mint)?;
+
+    msg!(
+        "Liquidity added: A={}, B={}, LP minted={}",
+        amount_a,
+        amount_b,
+        lp_to_mint
+    );
+
+  
+    let _ = pool_key;
+
+    Ok(())
+}
+
+
+
+fn integer_sqrt(value: u64) -> u64 {
+    if value == 0 {
+        return 0;
+    }
+
+    let mut x = value;
+    let mut y = (x + value / x) / 2;
+
+    while y < x {
+        x = y;
+        y = (x + value / x) / 2;
+    }
+
+    x
+}

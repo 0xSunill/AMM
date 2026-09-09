@@ -1,11 +1,11 @@
 pub mod initialize_pool;
-pub use initialize_pool::InitializePool;
+pub use initialize_pool::*;
 
 pub mod add_liquidity;
-pub use add_liquidity::AddLiquidity;
+pub use add_liquidity::*;
 
 pub mod remove_liquidity;
-pub use remove_liquidity::RemoveLiquidity;
+pub use remove_liquidity::*;
 
 pub mod swap;
-pub use swap::Swap;
+pub use swap::*;

@@ -19,8 +19,8 @@ pub mod amm {
         crate::instructions::initialize_pool::handler(ctx)
     }
 
-    pub fn add_liquidity(ctx: Context<AddLiquidity>) -> Result<()> {
-        crate::instructions::add_liquidity::handler(ctx)
+    pub fn add_liquidity(ctx: Context<AddLiquidity>,amount_a:u64,amount_b:u64) -> Result<()> {
+        crate::instructions::add_liquidity::handler(ctx,amount_a,amount_b)
     }
 
     pub fn remove_liquidity(ctx: Context<RemoveLiquidity>) -> Result<()> {
