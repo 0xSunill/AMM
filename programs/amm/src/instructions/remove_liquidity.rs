@@ -68,12 +68,29 @@ pub struct RemoveLiquidity<'info> {
 
 
 pub fn handler(ctx: Context<RemoveLiquidity>) -> Result<()> {
-//    check user has enough lp tokens
+ // 1. Read the current Token A reserve from Vault A
 
-// burn the lp tokens
-// calculate the amount of token a and token b to be withdrawn
-// transfer the tokens to the user
+    // 2. Read the current Token B reserve from Vault B
 
+    // 3. Read the total LP token supply
+
+    // 4. Validate that the user wants to burn more than 0 LP tokens
+
+    // 5. Validate that the LP supply is not zero
+
+    // 6. Calculate how much Token A the user should receive
+
+    // 7. Calculate how much Token B the user should receive
+
+    // 8. Burn the user's LP tokens
+
+    // 9. Create the PDA signer seeds for the Pool
+
+    // 10. Transfer Token A from Vault A to the user's Token A account
+
+    // 11. Transfer Token B from Vault B to the user's Token B account
+
+    // 12. Return success
 
     Ok(())
 }
