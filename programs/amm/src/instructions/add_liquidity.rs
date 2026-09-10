@@ -7,7 +7,6 @@ use crate::{constants::*, error::ErrorCode, state::PoolState};
 
 #[derive(Accounts)]
 pub struct AddLiquidity<'info> {
-  
     #[account(mut)]
     pub user: Signer<'info>,
 
@@ -28,13 +27,11 @@ pub struct AddLiquidity<'info> {
     )]
     pub vault_a: Account<'info, TokenAccount>,
 
-   
     #[account(
         mut,
         address = pool.token_b_vault,
     )]
     pub vault_b: Account<'info, TokenAccount>,
-
 
     #[account(
         mut,
@@ -42,11 +39,9 @@ pub struct AddLiquidity<'info> {
     )]
     pub lp_mint: Account<'info, Mint>,
 
-
     pub token_a_mint: Account<'info, Mint>,
     pub token_b_mint: Account<'info, Mint>,
 
-    // User's Token A account
     #[account(
         mut,
         token::mint = token_a_mint,
@@ -54,7 +49,6 @@ pub struct AddLiquidity<'info> {
     )]
     pub user_token_a: Account<'info, TokenAccount>,
 
- 
     #[account(
         mut,
         token::mint = token_b_mint,
@@ -62,7 +56,6 @@ pub struct AddLiquidity<'info> {
     )]
     pub user_token_b: Account<'info, TokenAccount>,
 
-   
     #[account(
         mut,
         token::mint = lp_mint,
@@ -74,7 +67,6 @@ pub struct AddLiquidity<'info> {
 }
 
 pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Result<()> {
-  
     let reserve_a = ctx.accounts.vault_a.amount;
     let reserve_b = ctx.accounts.vault_b.amount;
     let lp_supply = ctx.accounts.lp_mint.supply;
@@ -82,7 +74,6 @@ pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Resu
     require!(amount_a > 0, ErrorCode::InvalidAmount);
     require!(amount_b > 0, ErrorCode::InvalidAmount);
 
-   
     let lp_to_mint = if lp_supply == 0 {
         integer_sqrt(
             amount_a
@@ -110,21 +101,18 @@ pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Resu
 
     require!(lp_to_mint > 0, ErrorCode::InvalidAmount);
 
-   
     let transfer_a_accounts = Transfer {
         from: ctx.accounts.user_token_a.to_account_info(),
         to: ctx.accounts.vault_a.to_account_info(),
         authority: ctx.accounts.user.to_account_info(),
     };
 
-    let transfer_a_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        transfer_a_accounts,
-    );
-
+    // let transfer_a_ctx = CpiContext::new(
+    //     ctx.accounts.token_program.to_account_info(),
+    //     transfer_a_accounts,
+    // );
+    let transfer_a_ctx = CpiContext::new(ctx.accounts.token_program.key(), transfer_a_accounts);
     token::transfer(transfer_a_ctx, amount_a)?;
-
-   
 
     let transfer_b_accounts = Transfer {
         from: ctx.accounts.user_token_b.to_account_info(),
@@ -132,20 +120,23 @@ pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Resu
         authority: ctx.accounts.user.to_account_info(),
     };
 
-    let transfer_b_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        transfer_b_accounts,
-    );
+    // let transfer_b_ctx = CpiContext::new(
+    //     ctx.accounts.token_program.to_account_info(),
+    //     transfer_b_accounts,
+    // );
+    let transfer_b_ctx = CpiContext::new(ctx.accounts.token_program.key(), transfer_b_accounts);
 
     token::transfer(transfer_b_ctx, amount_b)?;
 
-
     let pool_key = ctx.accounts.pool.key();
+
+    let token_a_mint_key = ctx.accounts.token_a_mint.key();
+    let token_b_mint_key = ctx.accounts.token_b_mint.key();
 
     let signer_seeds: &[&[u8]] = &[
         POOL_SEED,
-        ctx.accounts.token_a_mint.key().as_ref(),
-        ctx.accounts.token_b_mint.key().as_ref(),
+        token_a_mint_key.as_ref(),
+        token_b_mint_key.as_ref(),
         &[ctx.accounts.pool.bump],
     ];
 
@@ -155,10 +146,12 @@ pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Resu
         authority: ctx.accounts.pool.to_account_info(),
     };
 
+    let signer_seeds_group = [signer_seeds];
+
     let mint_to_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         mint_to_accounts,
-        &[signer_seeds],
+        &signer_seeds_group,
     );
 
     token::mint_to(mint_to_ctx, lp_to_mint)?;
@@ -170,13 +163,10 @@ pub fn handler(ctx: Context<AddLiquidity>, amount_a: u64, amount_b: u64) -> Resu
         lp_to_mint
     );
 
-  
     let _ = pool_key;
 
     Ok(())
 }
-
-
 
 fn integer_sqrt(value: u64) -> u64 {
     if value == 0 {
