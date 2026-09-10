@@ -23,8 +23,8 @@ pub mod amm {
         crate::instructions::add_liquidity::handler(ctx,amount_a,amount_b)
     }
 
-    pub fn remove_liquidity(ctx: Context<RemoveLiquidity>) -> Result<()> {
-        crate::instructions::remove_liquidity::handler(ctx)
+    pub fn remove_liquidity(ctx: Context<RemoveLiquidity>, amount_lp:u64) -> Result<()> {
+        crate::instructions::remove_liquidity::handler(ctx,amount_lp)
     }
 
     pub fn swap(ctx: Context<Swap>) -> Result<()> {
