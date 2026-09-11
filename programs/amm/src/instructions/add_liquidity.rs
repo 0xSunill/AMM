@@ -39,14 +39,14 @@ pub struct AddLiquidity<'info> {
     )]
     pub vault_b: Account<'info, TokenAccount>,
 
-    // Existing LP mint
+   
     #[account(
         mut,
         address = pool.lp_token_mint,
     )]
     pub lp_mint: Account<'info, Mint>,
 
-    // Existing token mints
+  
     #[account(
         address = pool.token_a_mint,
     )]
