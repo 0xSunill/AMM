@@ -10,6 +10,9 @@ pub enum ErrorCode {
 
     #[msg("Insufficient liquidity")]
     InsufficientLiquidity,
+    
+    #[msg("Slippage tolerance exceeded")]
+    SlippageExceeded,
 
     #[msg("Burn amount must be greater than zero")]
     BurnAmountMustBeGreaterThanZero,
@@ -19,5 +22,4 @@ pub enum ErrorCode {
 
     #[msg("Burn amount must not exceed balance")]
     BurnAmountMustNotExceedBalance,
-    
 }

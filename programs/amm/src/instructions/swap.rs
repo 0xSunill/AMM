@@ -1,17 +1,14 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::{constants::*, state::PoolState};
 
-
+use crate::error::ErrorCode;
 #[derive(Accounts)]
 pub struct Swap<'info> {
-
- 
     #[account(mut)]
     pub user: Signer<'info>,
 
-  
     #[account(
         mut,
         seeds = [
@@ -23,28 +20,27 @@ pub struct Swap<'info> {
     )]
     pub pool: Account<'info, PoolState>,
 
-  
     #[account(
-        mut,
-        address = pool.token_a_vault,
-    )]
+    mut,
+    address = pool.token_a_vault,
+    token::mint = token_a_mint,
+    token::authority = pool,
+)]
     pub vault_a: Account<'info, TokenAccount>,
 
- 
     #[account(
-        mut,
-        address = pool.token_b_vault,
-    )]
+    mut,
+    address = pool.token_b_vault,
+    token::mint = token_b_mint,
+    token::authority = pool,
+)]
     pub vault_b: Account<'info, TokenAccount>,
 
-   
     // #[account(
     //     mut,
     //     address = pool.lp_token_mint,
     // )]
     // pub lp_mint: Account<'info, Mint>,
-
-  
     #[account(
         address = pool.token_a_mint,
     )]
@@ -55,7 +51,6 @@ pub struct Swap<'info> {
     )]
     pub token_b_mint: Account<'info, Mint>,
 
-    
     #[account(
         mut,
         token::mint = token_a_mint,
@@ -63,7 +58,6 @@ pub struct Swap<'info> {
     )]
     pub user_token_a: Account<'info, TokenAccount>,
 
-    
     #[account(
         mut,
         token::mint = token_b_mint,
@@ -71,15 +65,12 @@ pub struct Swap<'info> {
     )]
     pub user_token_b: Account<'info, TokenAccount>,
 
-   
     // #[account(
     //     mut,
     //     token::mint = lp_mint,
     //     token::authority = user
     // )]
     // pub user_lp_token: Account<'info, TokenAccount>,
-
-  
     pub token_program: Program<'info, Token>,
 }
 
@@ -89,9 +80,9 @@ pub fn handler(
     min_amount_out: u64,
     a_to_b: bool,
 ) -> Result<()> {
-
     // 1. Validate amount_in > 0
     require!(amount_in > 0, ErrorCode::InvalidAmount);
+
     // 2. Read current reserve A and reserve B
 
     let reserve_a = ctx.accounts.vault_a.amount;
@@ -106,15 +97,15 @@ pub fn handler(
 
     // 4. Calculate swap fee
     let fee_amount = (amount_in as u128)
-                    .checked_mul(FEE_BPS as u128)
-                    .ok_or(ErrorCode::MathOverflow)?
-                    .checked_div(10000u128)
-                    .ok_or(ErrorCode::MathOverflow)? as u64;
+        .checked_mul(FEE_BPS as u128)
+        .ok_or(ErrorCode::MathOverflow)?
+        .checked_div(10000u128)
+        .ok_or(ErrorCode::MathOverflow)? as u64;
 
     // 5. Calculate amount_in after fee
     let amount_in_after_fee = (amount_in as u128)
-                                .checked_sub(fee_amount as u128)
-                                .ok_or(ErrorCode::MathOverflow)? as u64;
+        .checked_sub(fee_amount as u128)
+        .ok_or(ErrorCode::MathOverflow)? as u64;
     // 6. Calculate amount_out using constant-product formula
 
     require!(
@@ -122,18 +113,19 @@ pub fn handler(
         ErrorCode::InsufficientLiquidity
     );
     let rev = (reserve_in as u128)
-                .checked_add(amount_in_after_fee as u128)
-                .ok_or(ErrorCode::MathOverflow)?;
+        .checked_add(amount_in_after_fee as u128)
+        .ok_or(ErrorCode::MathOverflow)?;
 
     let amount_out = (amount_in_after_fee as u128)
-                        .checked_mul(reserve_out as u128)
-                        .ok_or(ErrorCode::MathOverflow)?
-                        .checked_div(rev)
-                        .ok_or(ErrorCode::MathOverflow)? as u64;
+        .checked_mul(reserve_out as u128)
+        .ok_or(ErrorCode::MathOverflow)?
+        .checked_div(rev)
+        .ok_or(ErrorCode::MathOverflow)? as u64;
 
     // 7. Check amount_out >= min_amount_out
     //    for slippage protection
-    require!(amount_out >= min_amount_out, ErrorCode::InsufficientLiquidity);
+    require!(amount_out >= min_amount_out, ErrorCode::SlippageExceeded);
+    require!(amount_out > 0, ErrorCode::InvalidAmount);
     // 8. Transfer input token:
     //    User -> Pool Vault
 
@@ -160,7 +152,7 @@ pub fn handler(
     token::transfer(transfer_in_ctx, amount_in)?;
 
     // 9. Create Pool PDA signer seeds
- let token_a_mint_key = ctx.accounts.token_a_mint.key();
+    let token_a_mint_key = ctx.accounts.token_a_mint.key();
     let token_b_mint_key = ctx.accounts.token_b_mint.key();
     let pool_bump = ctx.accounts.pool.bump;
 
@@ -172,7 +164,6 @@ pub fn handler(
     ];
 
     let signer_seeds_group = [signer_seeds];
-
 
     // 10. Transfer output token:
     //     Pool Vault -> User
@@ -205,8 +196,10 @@ pub fn handler(
     // 11. Return success
 
     msg!(
-        "Swap: A={} -> B={}, amount_in={}, amount_out={}",
-        amount_in, amount_out, a_to_b
+        "Swap executed: amount_in={}, amount_out={}, a_to_b={}",
+        amount_in,
+        amount_out,
+        a_to_b
     );
     Ok(())
 }
