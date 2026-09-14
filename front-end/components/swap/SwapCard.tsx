@@ -166,7 +166,7 @@ export function SwapCard({
         symbol={inputSymbol}
         value={inputAmount}
         onChange={setInputAmount}
-        balance={inputBalance}
+        balance={publicKey ? inputBalance : undefined}
         decimals={inputDecimals}
         showMax
         disabled={txState.state !== "idle" && txState.state !== "success" && txState.state !== "error"}
@@ -203,7 +203,7 @@ export function SwapCard({
             ? formatTokenAmount(quote.amountOut, outputDecimals, 6)
             : ""
         }
-        balance={outputBalance}
+        balance={publicKey ? outputBalance : undefined}
         decimals={outputDecimals}
         readOnly
       />

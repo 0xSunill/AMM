@@ -44,17 +44,24 @@ export async function getTokenBalance(
   owner: PublicKey,
   mint: PublicKey
 ): Promise<bigint> {
-  const ata = getAssociatedTokenAddress(owner, mint);
+  try {
+    const ata = getAssociatedTokenAddress(owner, mint);
+    const info = await connection.getParsedAccountInfo(ata);
+    if (info.value && "parsed" in info.value.data) {
+      return BigInt(info.value.data.parsed.info.tokenAmount.amount);
+    }
+  } catch {
+    // Continue to fallback
+  }
 
   try {
-    const info = await connection.getParsedAccountInfo(ata);
-    if (!info.value) return 0n;
-
-    const data = info.value.data;
-    if ("parsed" in data) {
-      return BigInt(data.parsed.info.tokenAmount.amount);
+    const accounts = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+    if (accounts.value.length > 0) {
+      return accounts.value.reduce((total, acc) => {
+        const amt = BigInt(acc.account.data.parsed.info.tokenAmount.amount);
+        return total + amt;
+      }, 0n);
     }
-
     return 0n;
   } catch {
     return 0n;

@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { AddLiquidityCard } from "@/components/liquidity/AddLiquidityCard";
 import { RemoveLiquidityCard } from "@/components/liquidity/RemoveLiquidityCard";
+import { InitializePoolCard } from "@/components/pool/InitializePoolCard";
 import { PoolStats } from "@/components/pool/PoolStats";
+import { usePool } from "@/hooks/usePool";
 
 const TOKEN_A_MINT = process.env.NEXT_PUBLIC_TOKEN_A_MINT || "";
 const TOKEN_B_MINT = process.env.NEXT_PUBLIC_TOKEN_B_MINT || "";
@@ -20,6 +22,8 @@ export default function LiquidityPage() {
   const tokenBMint = useMemo(() => {
     try { return new PublicKey(TOKEN_B_MINT); } catch { return null; }
   }, []);
+
+  const { poolData, loading: poolLoading, refresh: refreshPool } = usePool(tokenAMint, tokenBMint);
 
   if (!tokenAMint || !tokenBMint) {
     return (
@@ -51,45 +55,57 @@ export default function LiquidityPage() {
       </div>
 
       <div className="max-w-md mx-auto">
-        {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-bg-secondary rounded-xl p-1 mb-6">
-          <button
-            onClick={() => setActiveTab("add")}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "add"
-                ? "bg-accent-primary/15 text-accent-secondary"
-                : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            Add Liquidity
-          </button>
-          <button
-            onClick={() => setActiveTab("remove")}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "remove"
-                ? "bg-accent-primary/15 text-accent-secondary"
-                : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            Remove Liquidity
-          </button>
-        </div>
-
-        {/* Active card */}
-        {activeTab === "add" ? (
-          <AddLiquidityCard
+        {!poolLoading && !poolData ? (
+          <InitializePoolCard
             tokenAMint={tokenAMint}
             tokenBMint={tokenBMint}
             tokenASymbol="TKA"
             tokenBSymbol="TKB"
+            onSuccess={refreshPool}
           />
         ) : (
-          <RemoveLiquidityCard
-            tokenAMint={tokenAMint}
-            tokenBMint={tokenBMint}
-            tokenASymbol="TKA"
-            tokenBSymbol="TKB"
-          />
+          <>
+            {/* Tab switcher */}
+            <div className="flex items-center gap-1 bg-bg-secondary rounded-xl p-1 mb-6">
+              <button
+                onClick={() => setActiveTab("add")}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "add"
+                    ? "bg-accent-primary/15 text-accent-secondary"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                Add Liquidity
+              </button>
+              <button
+                onClick={() => setActiveTab("remove")}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "remove"
+                    ? "bg-accent-primary/15 text-accent-secondary"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                Remove Liquidity
+              </button>
+            </div>
+
+            {/* Active card */}
+            {activeTab === "add" ? (
+              <AddLiquidityCard
+                tokenAMint={tokenAMint}
+                tokenBMint={tokenBMint}
+                tokenASymbol="TKA"
+                tokenBSymbol="TKB"
+              />
+            ) : (
+              <RemoveLiquidityCard
+                tokenAMint={tokenAMint}
+                tokenBMint={tokenBMint}
+                tokenASymbol="TKA"
+                tokenBSymbol="TKB"
+              />
+            )}
+          </>
         )}
 
         {/* Pool info */}

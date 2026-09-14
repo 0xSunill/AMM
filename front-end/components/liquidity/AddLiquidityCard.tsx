@@ -195,7 +195,7 @@ export function AddLiquidityCard({
           symbol={tokenASymbol}
           value={amountA}
           onChange={handleAmountAChange}
-          balance={balances.tokenA}
+          balance={publicKey ? balances.tokenA : undefined}
           decimals={decimalsA}
           showMax
         />
@@ -214,7 +214,7 @@ export function AddLiquidityCard({
           symbol={tokenBSymbol}
           value={amountB}
           onChange={isInitialDeposit ? handleAmountBChange : handleAmountBChange}
-          balance={balances.tokenB}
+          balance={publicKey ? balances.tokenB : undefined}
           decimals={decimalsB}
           showMax={isInitialDeposit}
         />

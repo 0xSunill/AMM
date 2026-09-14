@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { PoolStats } from "@/components/pool/PoolStats";
+import { InitializePoolCard } from "@/components/pool/InitializePoolCard";
 import { WalletInfo } from "@/components/ui/WalletInfo";
 import { usePool } from "@/hooks/usePool";
 
@@ -39,7 +40,7 @@ function PoolPageContent({
   tokenAMint: PublicKey;
   tokenBMint: PublicKey;
 }) {
-  const { poolData } = usePool(tokenAMint, tokenBMint);
+  const { poolData, loading, refresh } = usePool(tokenAMint, tokenBMint);
 
   return (
     <div className="py-8 sm:py-12 px-4">
@@ -57,6 +58,16 @@ function PoolPageContent({
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
+        {!loading && !poolData && (
+          <InitializePoolCard
+            tokenAMint={tokenAMint}
+            tokenBMint={tokenBMint}
+            tokenASymbol="TKA"
+            tokenBSymbol="TKB"
+            onSuccess={refresh}
+          />
+        )}
+
         {/* Full pool stats */}
         <PoolStats
           tokenAMint={tokenAMint}

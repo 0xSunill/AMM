@@ -81,6 +81,9 @@ export function useTokenBalances(
 
   useEffect(() => {
     refresh();
+
+    const interval = setInterval(refresh, 5_000);
+    return () => clearInterval(interval);
   }, [refresh]);
 
   return { sol, tokenA, tokenB, lp, loading, error, refresh };
