@@ -23,39 +23,39 @@ pub struct AddLiquidity<'info> {
         ],
         bump = pool.bump,
     )]
-    pub pool: Account<'info, PoolState>,
+    pub pool: Box<Account<'info, PoolState>>,
 
   
     #[account(
         mut,
         address = pool.token_a_vault,
     )]
-    pub vault_a: Account<'info, TokenAccount>,
+    pub vault_a: Box<Account<'info, TokenAccount>>,
 
  
     #[account(
         mut,
         address = pool.token_b_vault,
     )]
-    pub vault_b: Account<'info, TokenAccount>,
+    pub vault_b: Box<Account<'info, TokenAccount>>,
 
    
     #[account(
         mut,
         address = pool.lp_token_mint,
     )]
-    pub lp_mint: Account<'info, Mint>,
+    pub lp_mint: Box<Account<'info, Mint>>,
 
   
     #[account(
         address = pool.token_a_mint,
     )]
-    pub token_a_mint: Account<'info, Mint>,
+    pub token_a_mint: Box<Account<'info, Mint>>,
 
     #[account(
         address = pool.token_b_mint,
     )]
-    pub token_b_mint: Account<'info, Mint>,
+    pub token_b_mint: Box<Account<'info, Mint>>,
 
     
     #[account(
@@ -63,7 +63,7 @@ pub struct AddLiquidity<'info> {
         token::mint = token_a_mint,
         token::authority = user,
     )]
-    pub user_token_a: Account<'info, TokenAccount>,
+    pub user_token_a: Box<Account<'info, TokenAccount>>,
 
     
     #[account(
@@ -71,7 +71,7 @@ pub struct AddLiquidity<'info> {
         token::mint = token_b_mint,
         token::authority = user,
     )]
-    pub user_token_b: Account<'info, TokenAccount>,
+    pub user_token_b: Box<Account<'info, TokenAccount>>,
 
    
     #[account(
@@ -79,7 +79,7 @@ pub struct AddLiquidity<'info> {
         token::mint = lp_mint,
         token::authority = user
     )]
-    pub user_lp_token: Account<'info, TokenAccount>,
+    pub user_lp_token: Box<Account<'info, TokenAccount>>,
 
   
     pub token_program: Program<'info, Token>,

@@ -18,7 +18,7 @@ pub struct Swap<'info> {
         ],
         bump = pool.bump,
     )]
-    pub pool: Account<'info, PoolState>,
+    pub pool: Box<Account<'info, PoolState>>,
 
     #[account(
     mut,
@@ -26,7 +26,7 @@ pub struct Swap<'info> {
     token::mint = token_a_mint,
     token::authority = pool,
 )]
-    pub vault_a: Account<'info, TokenAccount>,
+    pub vault_a: Box<Account<'info, TokenAccount>>,
 
     #[account(
     mut,
@@ -34,7 +34,7 @@ pub struct Swap<'info> {
     token::mint = token_b_mint,
     token::authority = pool,
 )]
-    pub vault_b: Account<'info, TokenAccount>,
+    pub vault_b: Box<Account<'info, TokenAccount>>,
 
     // #[account(
     //     mut,
@@ -44,26 +44,26 @@ pub struct Swap<'info> {
     #[account(
         address = pool.token_a_mint,
     )]
-    pub token_a_mint: Account<'info, Mint>,
+    pub token_a_mint: Box<Account<'info, Mint>>,
 
     #[account(
         address = pool.token_b_mint,
     )]
-    pub token_b_mint: Account<'info, Mint>,
+    pub token_b_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         token::mint = token_a_mint,
         token::authority = user,
     )]
-    pub user_token_a: Account<'info, TokenAccount>,
+    pub user_token_a: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         token::mint = token_b_mint,
         token::authority = user,
     )]
-    pub user_token_b: Account<'info, TokenAccount>,
+    pub user_token_b: Box<Account<'info, TokenAccount>>,
 
     // #[account(
     //     mut,
@@ -97,7 +97,7 @@ pub fn handler(
 
     // 4. Calculate swap fee
     let fee_amount = (amount_in as u128)
-        .checked_mul(FEE_BPS as u128)
+        .checked_mul(ctx.accounts.pool.fee_bps as u128)
         .ok_or(ErrorCode::MathOverflow)?
         .checked_div(10000u128)
         .ok_or(ErrorCode::MathOverflow)? as u64;
