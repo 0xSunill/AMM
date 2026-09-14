@@ -6,10 +6,13 @@ use anchor_lang::{
 use anchor_litesvm::{
     AnchorLiteSVM,
     AssertionHelpers,
+    Signer,
     TestHelpers,
 };
 
 use anchor_spl::token::spl_token;
+
+extern crate anchor_lang;
 
 declare_program!(amm);
 
