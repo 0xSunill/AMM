@@ -143,7 +143,8 @@ export function calculateRemoveLiquidityAmounts(
 
 /**
  * Validate that a liquidity deposit is proportional.
- * On-chain check: amount_a * reserve_b == amount_b * reserve_a
+ * On-chain check allows slightly disproportionate amounts and takes the minimum LP minted. 
+ * For the UI warning, we allow a 0.5% tolerance to handle floating point truncation.
  */
 export function isProportionalDeposit(
   amountA: bigint,
@@ -152,7 +153,15 @@ export function isProportionalDeposit(
   reserveB: bigint
 ): boolean {
   if (reserveA <= 0n || reserveB <= 0n) return true; // First deposit, any ratio
-  return amountA * reserveB === amountB * reserveA;
+  
+  const expectedB = (amountA * reserveB) / reserveA;
+  if (expectedB === 0n) return amountB === 0n;
+  
+  const diff = amountB > expectedB ? amountB - expectedB : expectedB - amountB;
+  const tolerance = (expectedB * 50n) / 10000n; // 0.5%
+  
+  // Add an absolute tolerance of 1 to handle extremely small amounts
+  return diff <= tolerance || diff <= 1n;
 }
 
 /**

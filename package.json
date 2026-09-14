@@ -1,0 +1,11 @@
+{
+  "name": "solana-amm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix front-end run dev",
+    "build": "npm --prefix front-end run build",
+    "start": "npm --prefix front-end run start",
+    "lint": "npm --prefix front-end run lint"
+  }
+}

@@ -113,22 +113,19 @@ pub fn handler(
             ErrorCode::InsufficientLiquidity
         );
 
-        let left = (amount_a as u128)
-            .checked_mul(reserve_b as u128)
+        let lp_amount_a = (amount_a as u128)
+            .checked_mul(lp_supply as u128)
+            .ok_or(ErrorCode::MathOverflow)?
+            .checked_div(reserve_a as u128)
             .ok_or(ErrorCode::MathOverflow)?;
 
-        let right = (amount_b as u128)
-            .checked_mul(reserve_a as u128)
+        let lp_amount_b = (amount_b as u128)
+            .checked_mul(lp_supply as u128)
+            .ok_or(ErrorCode::MathOverflow)?
+            .checked_div(reserve_b as u128)
             .ok_or(ErrorCode::MathOverflow)?;
 
-        require!(left == right, ErrorCode::InvalidAmount);
-
-
-        amount_a
-            .checked_mul(lp_supply)
-            .ok_or(ErrorCode::MathOverflow)?
-            .checked_div(reserve_a)
-            .ok_or(ErrorCode::MathOverflow)?
+        std::cmp::min(lp_amount_a, lp_amount_b) as u64
     };
 
     require!(lp_to_mint > 0, ErrorCode::InvalidAmount);

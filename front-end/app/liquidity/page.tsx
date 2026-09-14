@@ -7,9 +7,10 @@ import { RemoveLiquidityCard } from "@/components/liquidity/RemoveLiquidityCard"
 import { InitializePoolCard } from "@/components/pool/InitializePoolCard";
 import { PoolStats } from "@/components/pool/PoolStats";
 import { usePool } from "@/hooks/usePool";
+import { DEFAULT_TOKEN_A_MINT, DEFAULT_TOKEN_B_MINT } from "@/lib/solana/constants";
 
-const TOKEN_A_MINT = process.env.NEXT_PUBLIC_TOKEN_A_MINT || "";
-const TOKEN_B_MINT = process.env.NEXT_PUBLIC_TOKEN_B_MINT || "";
+const TOKEN_A_MINT = DEFAULT_TOKEN_A_MINT;
+const TOKEN_B_MINT = DEFAULT_TOKEN_B_MINT;
 
 type Tab = "add" | "remove";
 

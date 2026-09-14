@@ -3,7 +3,7 @@ import { PublicKey, clusterApiUrl } from "@solana/web3.js";
 /** AMM Program ID */
 export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_AMM_PROGRAM_ID ||
-    "6gi14ywqAw7HR8kUUrRaK8dkXNdW2PyRifZT1nMkbct2"
+    "2TSDcRHMgevLUHFAsjxfHHrPwY29skEYPCRoVhYmowrq"
 );
 
 /** PDA seed constants — must exactly match the Anchor program */
@@ -46,3 +46,13 @@ export const DEFAULT_SLIPPAGE_BPS = 50; // 0.5%
 
 /** Pool state refresh interval in milliseconds */
 export const POOL_REFRESH_INTERVAL = 15_000;
+
+/** Default token mints on devnet */
+export const DEFAULT_TOKEN_A_MINT =
+  process.env.NEXT_PUBLIC_TOKEN_A_MINT ||
+  "BB8WdukvrDPgpzzncbbHHQFRfyumAkRNGN4j2tejbJNK";
+
+export const DEFAULT_TOKEN_B_MINT =
+  process.env.NEXT_PUBLIC_TOKEN_B_MINT ||
+  "quKyqwU1hwgcUwEFVQaPrhANn2f7TCqptzpH9Q58kRV";
+

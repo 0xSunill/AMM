@@ -25,7 +25,7 @@ const RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_AMM_PROGRAM_ID ||
-    "6gi14ywqAw7HR8kUUrRaK8dkXNdW2PyRifZT1nMkbct2"
+    "2TSDcRHMgevLUHFAsjxfHHrPwY29skEYPCRoVhYmowrq"
 );
 const TOKEN_A_MINT = new PublicKey(process.env.NEXT_PUBLIC_TOKEN_A_MINT);
 const TOKEN_B_MINT = new PublicKey(process.env.NEXT_PUBLIC_TOKEN_B_MINT);

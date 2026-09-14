@@ -49,7 +49,7 @@ export function Navbar() {
               </svg>
             </div>
             <span className="text-lg font-bold text-text-primary group-hover:text-accent-secondary transition-colors">
-              Nebula
+              Sun
             </span>
           </Link>
 

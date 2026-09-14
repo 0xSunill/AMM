@@ -19,6 +19,7 @@ import {
 } from "@/lib/solana/math";
 import { getAssociatedTokenAddress } from "@/lib/solana/tokens";
 import { TOKEN_PROGRAM_ID } from "@/lib/solana/constants";
+import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { TokenInput } from "../swap/TokenInput";
 import { TransactionStatus } from "../ui/TransactionStatus";
 
@@ -148,6 +149,14 @@ export function AddLiquidityCard({
           userLpToken,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
+        .preInstructions([
+          createAssociatedTokenAccountIdempotentInstruction(
+            publicKey,
+            userLpToken,
+            publicKey,
+            poolData.pool.lpTokenMint
+          ),
+        ])
         .rpc();
 
       await Promise.all([balances.refresh(), refreshPool()]);

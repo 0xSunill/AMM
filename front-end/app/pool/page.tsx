@@ -6,9 +6,10 @@ import { PoolStats } from "@/components/pool/PoolStats";
 import { InitializePoolCard } from "@/components/pool/InitializePoolCard";
 import { WalletInfo } from "@/components/ui/WalletInfo";
 import { usePool } from "@/hooks/usePool";
+import { DEFAULT_TOKEN_A_MINT, DEFAULT_TOKEN_B_MINT } from "@/lib/solana/constants";
 
-const TOKEN_A_MINT = process.env.NEXT_PUBLIC_TOKEN_A_MINT || "";
-const TOKEN_B_MINT = process.env.NEXT_PUBLIC_TOKEN_B_MINT || "";
+const TOKEN_A_MINT = DEFAULT_TOKEN_A_MINT;
+const TOKEN_B_MINT = DEFAULT_TOKEN_B_MINT;
 
 export default function PoolPage() {
   const tokenAMint = useMemo(() => {

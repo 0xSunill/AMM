@@ -16,6 +16,7 @@ import {
 } from "@/lib/solana/math";
 import { getAssociatedTokenAddress } from "@/lib/solana/tokens";
 import { TOKEN_PROGRAM_ID } from "@/lib/solana/constants";
+import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { TokenInput } from "../swap/TokenInput";
 import { TransactionStatus } from "../ui/TransactionStatus";
 
@@ -103,6 +104,20 @@ export function RemoveLiquidityCard({
           userLpToken,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
+        .preInstructions([
+          createAssociatedTokenAccountIdempotentInstruction(
+            publicKey,
+            userTokenA,
+            publicKey,
+            tokenAMint
+          ),
+          createAssociatedTokenAccountIdempotentInstruction(
+            publicKey,
+            userTokenB,
+            publicKey,
+            tokenBMint
+          ),
+        ])
         .rpc();
 
       await Promise.all([balances.refresh(), refreshPool()]);

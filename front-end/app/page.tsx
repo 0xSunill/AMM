@@ -4,14 +4,15 @@ import { useMemo } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { SwapCard } from "@/components/swap/SwapCard";
 import { PoolStats } from "@/components/pool/PoolStats";
+import { DEFAULT_TOKEN_A_MINT, DEFAULT_TOKEN_B_MINT } from "@/lib/solana/constants";
 
 /**
  * Pool token mint addresses.
  * In a production app these would come from a pool registry or user selection.
- * For now, configure them here or via environment variables.
+ * Falls back to default devnet tokens if not configured in environment.
  */
-const TOKEN_A_MINT = process.env.NEXT_PUBLIC_TOKEN_A_MINT || "";
-const TOKEN_B_MINT = process.env.NEXT_PUBLIC_TOKEN_B_MINT || "";
+const TOKEN_A_MINT = DEFAULT_TOKEN_A_MINT;
+const TOKEN_B_MINT = DEFAULT_TOKEN_B_MINT;
 
 export default function SwapPage() {
   const tokenAMint = useMemo(() => {

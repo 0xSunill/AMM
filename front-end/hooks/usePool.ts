@@ -16,10 +16,16 @@ interface UsePoolResult {
   refresh: () => Promise<void>;
 }
 
-/**
- * Fetches and caches the pool state, reserves, LP supply, and mint decimals.
- * Auto-refreshes every POOL_REFRESH_INTERVAL ms.
- */
+const decimalsCache = new Map<string, number>();
+
+async function getCachedDecimals(connection: Connection, mint: PublicKey): Promise<number> {
+  const key = mint.toBase58();
+  const cached = decimalsCache.get(key);
+  if (cached !== undefined) return cached;
+  const dec = await getMintDecimals(connection, mint);
+  decimalsCache.set(key, dec);
+  return dec;
+}
 export function usePool(
   tokenAMint: PublicKey | null,
   tokenBMint: PublicKey | null
@@ -65,9 +71,9 @@ export function usePool(
           getTokenAccountBalance(connection, pool.tokenAVault),
           getTokenAccountBalance(connection, pool.tokenBVault),
           getMintSupply(connection, pool.lpTokenMint),
-          getMintDecimals(connection, pool.tokenAMint),
-          getMintDecimals(connection, pool.tokenBMint),
-          getMintDecimals(connection, pool.lpTokenMint),
+          getCachedDecimals(connection, pool.tokenAMint),
+          getCachedDecimals(connection, pool.tokenBMint),
+          getCachedDecimals(connection, pool.lpTokenMint),
         ]);
 
       setPoolData({
@@ -83,7 +89,16 @@ export function usePool(
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch pool";
-      setError(message);
+      // Account not existing on-chain simply means the pool has not been initialized yet
+      if (
+        message.includes("Account does not exist") ||
+        message.includes("could not find account") ||
+        message.includes("has no data")
+      ) {
+        setError(null);
+      } else {
+        setError(message);
+      }
       setPoolData(null);
     } finally {
       setLoading(false);

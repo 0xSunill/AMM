@@ -82,8 +82,21 @@ export function useTokenBalances(
   useEffect(() => {
     refresh();
 
-    const interval = setInterval(refresh, 5_000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
+    }, 10_000);
+
+    const handleFocus = () => {
+      refresh();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [refresh]);
 
   return { sol, tokenA, tokenB, lp, loading, error, refresh };

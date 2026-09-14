@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nebula AMM | Swap & Provide Liquidity on Solana",
+  title: "Sun AMM | Swap & Provide Liquidity on Solana",
   description:
     "A decentralized AMM built on Solana. Swap tokens, provide liquidity, and earn fees with near-zero transaction costs.",
 };

@@ -16,7 +16,10 @@ export function SolanaProvider({ children }: { children: React.ReactNode }) {
   return (
     <ConnectionProvider
       endpoint={endpoint}
-      config={{ commitment: "confirmed" }}
+      config={{ 
+        commitment: "confirmed",
+        wsEndpoint: process.env.NEXT_PUBLIC_SOLANA_WS_URL || "wss://api.devnet.solana.com",
+      }}
     >
       <WalletProvider wallets={[]} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
