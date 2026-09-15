@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Connection } from "@solana/web3.js";
 import { useAmmProgram } from "./useAmmProgram";
 import { getPoolPda } from "@/lib/solana/pda";
 import { getTokenAccountBalance, getMintSupply, getMintDecimals } from "@/lib/solana/tokens";
