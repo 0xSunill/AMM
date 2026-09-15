@@ -44,8 +44,8 @@ export function getExplorerUrl(
 /** Default slippage tolerance in basis points */
 export const DEFAULT_SLIPPAGE_BPS = 50; // 0.5%
 
-/** Pool state refresh interval in milliseconds */
-export const POOL_REFRESH_INTERVAL = 15_000;
+/** Minimum age (ms) before data is considered stale and refetched on focus */
+export const STALE_DATA_MS = 30_000;
 
 /** Default token mints on devnet */
 export const DEFAULT_TOKEN_A_MINT =

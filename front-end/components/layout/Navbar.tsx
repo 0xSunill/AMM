@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useState, useRef, useEffect } from "react";
+import { FaucetButton } from "@/components/faucet/FaucetButton";
 
 const NAV_ITEMS = [
   { href: "/", label: "Swap" },
@@ -73,8 +74,14 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Wallet / Mobile Menu */}
+          {/* Faucet / Wallet / Mobile Menu */}
           <div className="flex items-center gap-3">
+            {/* Faucet button (visible when connected) */}
+            {publicKey && (
+              <div className="hidden sm:block">
+                <FaucetButton />
+              </div>
+            )}
             {/* Wallet button */}
             {publicKey ? (
               <div className="relative" ref={dropdownRef}>
@@ -191,6 +198,12 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              {/* Mobile faucet button */}
+              {publicKey && (
+                <div className="px-4 pt-2">
+                  <FaucetButton />
+                </div>
+              )}
             </div>
           </div>
         )}

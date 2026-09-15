@@ -6,7 +6,7 @@ import { PublicKey, Connection } from "@solana/web3.js";
 import { useAmmProgram } from "./useAmmProgram";
 import { getPoolPda } from "@/lib/solana/pda";
 import { getTokenAccountBalance, getMintSupply, getMintDecimals } from "@/lib/solana/tokens";
-import { POOL_REFRESH_INTERVAL } from "@/lib/solana/constants";
+import { STALE_DATA_MS } from "@/lib/solana/constants";
 import type { PoolData, PoolState } from "@/types/amm";
 
 interface UsePoolResult {
@@ -35,7 +35,7 @@ export function usePool(
   const [poolData, setPoolData] = useState<PoolData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastFetchRef = useRef<number>(0);
 
   const fetchPool = useCallback(async () => {
     if (!tokenAMint || !tokenBMint || !readonlyProgram) {
@@ -86,6 +86,8 @@ export function usePool(
         tokenBDecimals,
         lpDecimals,
       });
+
+      lastFetchRef.current = Date.now();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch pool";
@@ -106,14 +108,23 @@ export function usePool(
   }, [tokenAMint, tokenBMint, connection, readonlyProgram]);
 
   useEffect(() => {
-    fetchPool();
+    // Fetch on mount (deferred to avoid synchronous setState in effect)
+    queueMicrotask(() => fetchPool());
 
-    intervalRef.current = setInterval(fetchPool, POOL_REFRESH_INTERVAL);
+    // Refresh when tab becomes visible (if data is stale)
+    const handleVisibility = () => {
+      if (
+        document.visibilityState === "visible" &&
+        Date.now() - lastFetchRef.current > STALE_DATA_MS
+      ) {
+        fetchPool();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [fetchPool]);
 

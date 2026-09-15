@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { getTokenBalance } from "@/lib/solana/tokens";
+import { STALE_DATA_MS } from "@/lib/solana/constants";
 
 interface TokenBalances {
   sol: bigint;
@@ -31,6 +32,7 @@ export function useTokenBalances(
   const [lp, setLp] = useState<bigint>(0n);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchRef = useRef<number>(0);
 
   const refresh = useCallback(async () => {
     if (!publicKey) {
@@ -72,6 +74,8 @@ export function useTokenBalances(
       setTokenA(balA);
       setTokenB(balB);
       setLp(balLp);
+
+      lastFetchRef.current = Date.now();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch balances");
     } finally {
@@ -80,21 +84,31 @@ export function useTokenBalances(
   }, [publicKey, connection, tokenAMint, tokenBMint, lpMint]);
 
   useEffect(() => {
-    refresh();
+    // Fetch on mount (deferred to avoid synchronous setState in effect)
+    queueMicrotask(() => refresh());
 
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
+    // Refresh when tab becomes visible (if data is stale)
+    const handleVisibility = () => {
+      if (
+        document.visibilityState === "visible" &&
+        Date.now() - lastFetchRef.current > STALE_DATA_MS
+      ) {
         refresh();
       }
-    }, 10_000);
-
-    const handleFocus = () => {
-      refresh();
     };
+
+    // Refresh on window focus (if data is stale)
+    const handleFocus = () => {
+      if (Date.now() - lastFetchRef.current > STALE_DATA_MS) {
+        refresh();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleFocus);
 
     return () => {
-      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleFocus);
     };
   }, [refresh]);
