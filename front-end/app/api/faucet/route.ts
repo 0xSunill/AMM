@@ -69,33 +69,9 @@ function getFaucetKeypair(): Keypair {
   return Keypair.fromSecretKey(decoded);
 }
 
-// ── Confirm via polling (no WebSocket needed) ───────────────────────────────
-
-async function confirmTransactionPolling(
-  connection: Connection,
-  signature: string,
-  timeoutMs = 30_000
-): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const { value } = await connection.getSignatureStatuses([signature]);
-    const status = value?.[0];
-    if (status) {
-      if (status.err) {
-        throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
-      }
-      if (
-        status.confirmationStatus === "confirmed" ||
-        status.confirmationStatus === "finalized"
-      ) {
-        return;
-      }
-    }
-    // Wait 2 seconds before polling again
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  throw new Error("Transaction confirmation timed out");
-}
+// ── Vercel-compatible: max function duration ─────────────────────────────────
+// Vercel Hobby = 10s, Pro = 60s. Set this to stay within limits.
+export const maxDuration = 10;
 
 // ── Route handler ───────────────────────────────────────────────────────────
 
@@ -210,15 +186,14 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    // Sign and send (skipPreflight=false for simulation check)
+    // Sign and send — preflight simulation catches most errors
+    // We skip waiting for full confirmation to stay within Vercel's timeout limit.
+    // The preflight simulation (skipPreflight: false) validates the tx will succeed.
     tx.sign(faucetKeypair);
     const signature = await connection.sendRawTransaction(tx.serialize(), {
       skipPreflight: false,
       preflightCommitment: "confirmed",
     });
-
-    // Confirm via polling (avoids WebSocket which Alchemy doesn't support)
-    await confirmTransactionPolling(connection, signature);
 
     // Record the request for cooldown
     recordRequest(walletAddress);
